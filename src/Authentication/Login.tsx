@@ -1,120 +1,117 @@
-import React, { useRef } from "react";
-import { TextInput as RNTextInput } from "react-native";
-import { CommonActions } from "@react-navigation/native";
-import { BorderlessButton } from "react-native-gesture-handler";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-
-import { Container, Button, Text, Box } from "../components";
+import React, { useContext } from "react";
+import { Button, Container, Text } from "../components";
+import { Box } from "../components/Theme";
+import { TextInput } from "./components/Form/TextInput";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { AuthNavigationProps } from "../components/Navigation";
-import TextInput from "../components/Form/TextInput";
-import Checkbox from "../components/Form/Checkbox";
-import Footer from "./components/Footer";
+import { Footer } from "./components/Footer";
+import {
+  CommonActions
+} from "@react-navigation/native";
+import { AuthenticationContext } from "./authentication.context";
 
-const LoginSchema = Yup.object().shape({
-  email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string()
-    .min(2, "Too Short!")
-    .max(50, "Too Long!")
-    .required("Required"),
-});
+export const Login = ({ navigation }: AuthNavigationProps<"Login">) => {
+  const { onAuthLogin }: any = useContext(AuthenticationContext);
 
-const Login = ({ navigation }: AuthNavigationProps<"Login">) => {
-  const {
-    handleChange,
-    handleBlur,
-    handleSubmit,
-    values,
-    errors,
-    touched,
-    setFieldValue,
-  } = useFormik({
-    validationSchema: LoginSchema,
-    initialValues: { email: "", password: "", remember: false },
-    onSubmit: () =>
+  const schema = yup.object().shape({
+    email: yup.string().email("Emailnya yang bener bos!").required(),
+    password: yup.string().min(8).max(32).required(),
+  });
+
+  const onSubmit = async (data: any) => {
+    await onAuthLogin(data).then(() => {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: "Home" }],
         })
-      ),
+      );
+    });
+  };
+
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    mode: "onChange",
+    resolver: yupResolver(schema),
   });
-  const password = useRef<RNTextInput>(null);
+
   const footer = (
     <Footer
-      title="Don't have an account?"
-      action="Sign Up here"
+      title="Don't have an account? "
+      action=" Sign Up Here"
       onPress={() => navigation.navigate("SignUp")}
     />
   );
 
   return (
     <Container pattern={0} {...{ footer }}>
-      <Text variant="title1" textAlign="center" marginBottom="l">
-        Welcome Back
-      </Text>
-      <Text variant="body" textAlign="center" marginBottom="l">
-        Use your credentials below and login to your account.
-      </Text>
-      <Box>
-        <Box marginBottom="m">
-          <TextInput
-            icon="mail"
-            placeholder="Enter your email"
-            onChangeText={handleChange("email")}
-            onBlur={handleBlur("email")}
-            error={errors.email}
-            touched={touched.email}
-            autoCompleteType="email"
-            returnKeyType="next"
-            returnKeyLabel="next"
-            onSubmitEditing={() => password.current?.focus()}
-          />
-        </Box>
-        <TextInput
-          ref={password}
-          icon="lock"
-          placeholder="Enter your password"
-          onChangeText={handleChange("password")}
-          onBlur={handleBlur("password")}
-          error={errors.password}
-          touched={touched.password}
-          autoCompleteType="password"
-          autoCapitalize="none"
-          returnKeyType="go"
-          returnKeyLabel="go"
-          onSubmitEditing={() => handleSubmit()}
-          secureTextEntry
+      <Box padding="xl" flex={1} justifyContent="center">
+        <Text variant="title1" textAlign="center" marginBottom="l">
+          Welcome Back
+        </Text>
+        <Text variant="body" textAlign="center" marginBottom="l">
+          Use your credentials below and login to your account
+        </Text>
+        <Controller
+          name="email"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              icon="mail"
+              placeholder="Enter your Email"
+              onChangeText={(text) => onChange(text)}
+              value={value}
+              error={errors.email}
+              errorMessage={errors?.email?.message}
+              autoCapitalize="none"
+              autoCompleteType="email"
+              returnKeyLabel="next"
+              returnKeyType="next"
+            />
+          )}
         />
-        <Box
-          flexDirection="row"
-          justifyContent="space-between"
-          marginVertical="s"
-          alignItems="center"
-        >
-          <Checkbox
-            label="Remember me"
-            checked={values.remember}
-            onChange={() => setFieldValue("remember", !values.remember)}
-          />
-          <BorderlessButton
+
+        <Controller
+          name="password"
+          control={control}
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              icon="lock"
+              placeholder="Enter your Password"
+              onChangeText={(text) => onChange(text)}
+              value={value}
+              error={errors.password}
+              errorMessage={errors?.password?.message}
+              autoCapitalize="none"
+              autoCompleteType="password"
+              returnKeyLabel="go"
+              returnKeyType="go"
+              secureTextEntry
+            />
+          )}
+        />
+        <Box flexDirection="row" justifyContent="center">
+          <Button
+            variant="transparant"
             onPress={() => navigation.navigate("ForgotPassword")}
           >
-            <Text variant="button" color="primary">
-              Forgot Password
-            </Text>
-          </BorderlessButton>
+            <Text color="primary"> Forgot Password </Text>
+          </Button>
         </Box>
+
         <Box alignItems="center" marginTop="m">
           <Button
             variant="primary"
-            label="Log into your account"
-            onPress={handleSubmit}
+            label="Log Into your account"
+            onPress={handleSubmit(onSubmit)}
           />
         </Box>
       </Box>
     </Container>
   );
 };
-
-export default Login;

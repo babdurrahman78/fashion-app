@@ -1,91 +1,134 @@
-import React, { useRef } from 'react';
-import { TextInput as RNTextInput } from 'react-native';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import React, { useContext } from "react";
+import { Button, Container, Text } from "../components";
+import { Box } from "../components/Theme";
+import { TextInput } from "./components/Form/TextInput";
 
-import { Container, Button, Text, Box } from '../components';
-import { AuthNavigationProps } from '../components/Navigation';
-import TextInput  from '../components/Form/TextInput';
-import Footer from './components/Footer';
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+    AuthNavigationProps,
+} from "../components/Navigation";
+import { Footer } from "./components/Footer";
+import { AuthenticationContext } from "./authentication.context";
 
-const SignUpSchema = Yup.object().shape({
-    email: Yup.string().email('Invalid email').required('Required'),
-    password: Yup.string().min(2, 'Too Short!').max(50, 'Too Long!').required('Required'),
-    confirmPassword: Yup.string().equals([Yup.ref('password')], "Passwords don't match").required('Required')
-});
-
-const SignUp = ({ navigation }: AuthNavigationProps<"SignUp">) => {
-    const { 
-        handleChange, handleBlur, handleSubmit,
-        errors, touched 
-    } = useFormik({
-        validationSchema: SignUpSchema,
-        initialValues: { email: '', password: '', confirmPassword: '' },
-        onSubmit: () => navigation.navigate('Home')
+export const SignUp = ({
+    navigation,
+}: AuthNavigationProps<"SignUp">) => {
+    const SignUpschema = yup.object().shape({
+        email: yup.string().email("Emailnya yang bener ya!").required(), //email("Pesan Email")
+        password: yup.string().min(8).max(32).required("Passwordnya harus di isi"),
+        retypedPasswords: yup
+            .string()
+            .required("Passwordnya harus sama yah!")
+            .oneOf([yup.ref("password")], "Passwordnya tidak sama!"),
     });
-    const password = useRef<RNTextInput>(null);
-    const confirmPassword = useRef<RNTextInput>(null);
-    const footer = <Footer title="Already have an account?" action="Login here" onPress={() => navigation.navigate('Login')} />
+
+    const { onAuthRegister }: any = useContext(AuthenticationContext);
+
+    const onSubmitSignUp = async (data: any) => {
+        await onAuthRegister(data)
+            .then(() => {
+                navigation.navigate("Login");
+            })
+            .catch((err: any) => {
+                console.log(err);
+            });
+    };
+
+    const {
+        handleSubmit,
+        control,
+        formState: { errors },
+    } = useForm({
+        mode: "onChange",
+        resolver: yupResolver(SignUpschema),
+    });
+
+    const footer = (
+        <Footer
+            title="Already have an account? "
+            action=" Login here"
+            onPress={() => navigation.navigate("Login")}
+        />
+    );
 
     return (
-        <Container pattern={1} {...{footer}}>
-            <Text variant="title1" textAlign="center" marginBottom="l">Create account</Text>
-            <Text variant="body" textAlign="center" marginBottom="l">
-                Let us know your email and password.
-            </Text>
-            <Box>
-                <Box marginBottom="m">
-                    <TextInput 
-                        icon="mail" 
-                        placeholder="Enter your email"
-                        onChangeText={handleChange('email')}
-                        onBlur={handleBlur('email')} 
-                        error={errors.email}
-                        touched={touched.email}
-                        autoCompleteType="email"
-                        returnKeyType="next"
-                        returnKeyLabel="next"
-                        onSubmitEditing={() => password.current?.focus()}
-                    />
-                </Box>
-                <Box marginBottom="m">
-                    <TextInput 
-                        ref={password}
-                        icon="lock" 
-                        placeholder="Enter your password" 
-                        onChangeText={handleChange('password')}
-                        onBlur={handleBlur('password')}
-                        error={errors.password}
-                        touched={touched.password}
-                        autoCompleteType="password"
-                        autoCapitalize="none"
-                        returnKeyType="next"
-                        returnKeyLabel="next"
-                        onSubmitEditing={() => confirmPassword.current?.focus()}
-                        secureTextEntry
-                    />
-                </Box>
-                <TextInput 
-                    ref={confirmPassword}
-                    icon="lock" 
-                    placeholder="Confirm your password" 
-                    onChangeText={handleChange('confirmPassword')}
-                    onBlur={handleBlur('confirmPassword')}
-                    error={errors.confirmPassword}
-                    touched={touched.confirmPassword}
-                    autoCompleteType="password"
-                    autoCapitalize="none"
-                    returnKeyType="go"
-                    returnKeyLabel="go"
-                    onSubmitEditing={() => handleSubmit()}
-                    secureTextEntry
+        <Container pattern={1} {...{ footer }}>
+            <Box padding="xl" flex={1} justifyContent="center">
+                <Text variant="title1" textAlign="center" marginBottom="l">
+                    Create account
+                </Text>
+                <Text variant="body" textAlign="center">
+                    Let's us know what your name, email, and your password
+                </Text>
+                <Controller
+                    name="email"
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            icon="mail"
+                            placeholder="Enter your Email"
+                            onChangeText={(text) => onChange(text)}
+                            value={value}
+                            error={errors.email}
+                            errorMessage={errors?.email?.message}
+                            autoCapitalize="none"
+                            autoCompleteType="email"
+                            returnKeyLabel="next"
+                            returnKeyType="next"
+                        />
+                    )}
                 />
+
+                <Controller
+                    name="password"
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            icon="lock"
+                            placeholder="Enter your Password"
+                            onChangeText={(text) => onChange(text)}
+                            value={value}
+                            error={errors.password}
+                            errorMessage={errors?.password?.message}
+                            autoCapitalize="none"
+                            autoCompleteType="password"
+                            returnKeyLabel="next"
+                            returnKeyType="next"
+                            secureTextEntry
+                        />
+                    )}
+                />
+
+                <Controller
+                    name="retypedPasswords"
+                    control={control}
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            icon="lock"
+                            placeholder="Retyped your Password"
+                            onChangeText={(text) => onChange(text)}
+                            value={value}
+                            error={errors.retypedPasswords}
+                            errorMessage={errors?.retypedPasswords?.message}
+                            autoCapitalize="none"
+                            autoCompleteType="password"
+                            returnKeyLabel="go"
+                            returnKeyType="go"
+                            secureTextEntry
+                        />
+                    )}
+                />
+
                 <Box alignItems="center" marginTop="m">
-                    <Button variant="primary" label="Create your account" onPress={handleSubmit} />
+                    <Button
+                        variant="primary"
+                        label="Create Account"
+                        onPress={handleSubmit(onSubmitSignUp)}
+                    />
                 </Box>
             </Box>
         </Container>
-    )
-}
-
-export default SignUp;
+    );
+};
