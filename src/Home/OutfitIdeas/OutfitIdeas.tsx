@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { sub } from "react-native-reanimated";
+import React, { useState, useEffect } from "react";
 import { useTiming } from "react-native-redash";
+import axios from "axios";
 
 import { Box, Header } from "../../components";
 import { HomeNavigationProps } from "../../components/Navigation";
@@ -8,18 +8,18 @@ import Background from "./Background";
 import Categories from "./Categories";
 import Card from "./Card";
 
-const cards = [
-  { index: 3, source: require("../../Authentication/assets/5.png") },
-  { index: 2, source: require("../../Authentication/assets/5.png") },
-  { index: 1, source: require("../../Authentication/assets/5.png") },
-  { index: 0, source: require("../../Authentication/assets/5.png") },
-];
-
 const step = 1 / (cards.length - 1);
 
 const OutfitIdeas = ({ navigation }: HomeNavigationProps<"OutfitIdeas">) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const animatedIndex = useTiming(currentIndex);
+  const [cards, setCards] = useState([])
+
+  useEffect(() => {
+    axios.get('http://192.168.1.10:3000/product').then((response: any) => {
+      setCards(response.data);
+    });
+  }, [])
 
   return (
     <Box flex={1} backgroundColor="background">

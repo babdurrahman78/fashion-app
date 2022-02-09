@@ -9,19 +9,19 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import {
     AuthNavigationProps,
 } from "../components/Navigation";
-import { Footer } from "./components/Footer";
+import Footer from "./components/Footer";
 import { AuthenticationContext } from "./authentication.context";
 
 export const SignUp = ({
     navigation,
 }: AuthNavigationProps<"SignUp">) => {
     const SignUpschema = yup.object().shape({
-        email: yup.string().email("Emailnya yang bener ya!").required(), //email("Pesan Email")
-        password: yup.string().min(8).max(32).required("Passwordnya harus di isi"),
+        email: yup.string().email("Email doesn't valid").required(),
+        password: yup.string().min(8).max(32).required("Password is required"),
         retypedPasswords: yup
             .string()
-            .required("Passwordnya harus sama yah!")
-            .oneOf([yup.ref("password")], "Passwordnya tidak sama!"),
+            .required("Password doesnt match!")
+            .oneOf([yup.ref("password")], "Password doesnt match!"),
     });
 
     const { onAuthRegister }: any = useContext(AuthenticationContext);

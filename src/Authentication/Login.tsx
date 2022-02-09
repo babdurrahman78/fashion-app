@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { AuthNavigationProps } from "../components/Navigation";
-import { Footer } from "./components/Footer";
+import Footer from "./components/Footer";
 import {
   CommonActions
 } from "@react-navigation/native";
@@ -16,7 +16,7 @@ export const Login = ({ navigation }: AuthNavigationProps<"Login">) => {
   const { onAuthLogin }: any = useContext(AuthenticationContext);
 
   const schema = yup.object().shape({
-    email: yup.string().email("Emailnya yang bener bos!").required(),
+    email: yup.string().email("Email doesn't valid").required(),
     password: yup.string().min(8).max(32).required(),
   });
 
